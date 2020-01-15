@@ -13,10 +13,11 @@ let s:runner = {
 \   },
 \ }
 
+let s:winid = -1
 
 function! s:runner.validate() abort
-  if !has('terminal')
-    throw 'Needs +terminal feature.'
+  if !has('nvim')
+    throw 'Needs +nvim.'
   endif
   if !s:is_win && !executable('sh')
     throw 'Needs "sh" on other than MS Windows.'
@@ -25,6 +26,7 @@ endfunction
 
 function! s:runner.init(session) abort
   let a:session.config.outputter = 'null'
+  let g:quickrun#closeonsuccess = get(a:session.config, 'runner/terminal/closeonsuccess', 1)
 endfunction
 
 function! s:runner.run(commands, input, session) abort
@@ -39,17 +41,28 @@ function! s:runner.run(commands, input, session) abort
   let options = {
   \   'term_name': 'quickrun: ' . command,
   \   'curwin': 1,
-  \   'close_cb': self._job_close_cb,
-  \   'exit_cb': self._job_exit_cb,
+  \   'on_exit': self._job_exit_cb,
   \ }
 
   let self._key = a:session.continue()
   let prev_window = s:VT.trace_window()
   execute self.config.opener
-  let self._bufnr = term_start(cmd_arg, options)
+  let g:quickrun#terminalid = get(g:, 'quickrun#terminalid', [])
+  call add(g:quickrun#terminalid, win_getid())
+  let s:winid = win_getid()
+  let self._bufnr = termopen(cmd_arg, options)
   if !self.config.into
     call s:VT.jump(prev_window)
   endif
+endfunction
+
+function! g:Close_terminal() abort
+  for term_id in g:quickrun#terminalid
+      let winnr = win_id2win(term_id)
+      if winnr > 0
+          execute winnr.'wincmd c'
+      endif
+  endfor
 endfunction
 
 function! s:runner.sweep() abort
@@ -61,19 +74,19 @@ function! s:runner.sweep() abort
   endif
 endfunction
 
-function! s:runner._job_close_cb(channel) abort
-  if has_key(self, '_job_exited')
-    call quickrun#session(self._key, 'finish', self._job_exited)
-  else
-    let self._job_exited = 0
-  endif
-endfunction
-
-function! s:runner._job_exit_cb(job, exit_status) abort
+function! s:runner._job_exit_cb(job, exit_status, event) abort
   if has_key(self, '_job_exited')
     call quickrun#session(self._key, 'finish', a:exit_status)
   else
     let self._job_exited = a:exit_status
+  endif
+  let closeonsuccess = g:quickrun#closeonsuccess
+  echo closeonsuccess
+  if self._job_exited == 0 && closeonsuccess
+      let winnr = win_id2win(s:winid)
+      if winnr > 0
+          execute winnr.'wincmd c'
+      endif
   endif
 endfunction
 
