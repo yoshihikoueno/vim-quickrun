@@ -56,13 +56,15 @@ function! s:runner.run(commands, input, session) abort
   endif
 endfunction
 
-function! g:Close_terminal() abort
+function! g:Close_quickrun_terminal() abort
+  let l:winview = winsaveview()
   for term_id in g:quickrun#terminalid
       let winnr = win_id2win(term_id)
       if winnr > 0
           execute winnr.'wincmd c'
       endif
   endfor
+  call winrestview(l:winview)
 endfunction
 
 function! s:runner.sweep() abort
