@@ -47,8 +47,20 @@ function! s:runner.run(commands, input, session) abort
   let self._key = a:session.continue()
   let prev_window = s:VT.trace_window()
   execute self.config.opener
-  let g:quickrun#terminalid = get(g:, 'quickrun#terminalid', [])
-  call add(g:quickrun#terminalid, win_getid())
+
+  " Recording information so that we can close them after the execution.
+  if self.config.opener[:5] == "tabnew"
+      let s:tab = 1
+      let s:tabid = tabpagenr()
+      let g:quickrun#terminaltabid = get(g:, 'quickrun#terminaltabid', [])
+      call add(g:quickrun#terminaltabid, tabpagenr())
+  else
+      let s:tab = 0
+      let g:quickrun#terminalid = get(g:, 'quickrun#terminalid', [])
+      call add(g:quickrun#terminalid, win_getid())
+  endif
+
+  " Starting the terminal
   let s:winid = win_getid()
   let self._bufnr = termopen(cmd_arg, options)
   if !self.config.into
@@ -84,9 +96,13 @@ function! s:runner._job_exit_cb(job, exit_status, event) abort
   endif
   let closeonsuccess = g:quickrun#closeonsuccess
   if self._job_exited == 0 && closeonsuccess
-      let winnr = win_id2win(s:winid)
-      if winnr > 0
-          execute winnr.'wincmd c'
+      if s:tab
+        execute 'tabclose ' . s:tabid
+      else
+        let winnr = win_id2win(s:winid)
+        if winnr > 0
+            execute winnr.'wincmd c'
+        endif
       endif
   endif
 endfunction
