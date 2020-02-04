@@ -83,7 +83,6 @@ function! s:runner._job_exit_cb(job, exit_status, event) abort
     let self._job_exited = a:exit_status
   endif
   let closeonsuccess = g:quickrun#closeonsuccess
-  echo closeonsuccess
   if self._job_exited == 0 && closeonsuccess
       let winnr = win_id2win(s:winid)
       if winnr > 0
