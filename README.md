@@ -79,12 +79,12 @@ It's getting complicated, right?
 But the story doesn't stop here.
 After installing all the necessary additional plugins, I had my program running asynchronously,
 *without outputs* in real-time.
-It was not acceptable at all. So I tried my best to make it just to give up six hours later.
+It was not acceptable at all. I tried my best to make this simple thing running, but it just won't work.
 
-Then I thought to myself, *"Well, things are so complicated in the first place?"*
+Then I thought to myself, *"Well, why does it have to be so complicated in the first place?"*
 I mean, we have "terminal" feature built-in to our nvim, which supports everything we need
 including asynchronous execution and real-time output presentation.
-It just didn't make sense to me that we have to something complicated just to get things
+It just didn't make sense to me that we have to do something complicated just to get things
 we already have.
 
 
